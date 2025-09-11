@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    image: ohm-dashboard-dev
+    container_name: ohm-dashboard-dev
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - PORT=8888
+    # If your app calls an API, add envs like:
+    # - REACT_APP_API_URL=http://host.docker.internal:3001
+    command: npm start
+
+  # production service (optional)
+  web-prod:
+    build:
+      context: .
+      target: build
+    image: ohm-dashboard:latest
+    container_name: ohm-dashboard
+    ports:
+      - "8080:80"
+    depends_on:
+      - web
+    profiles: [prod]
