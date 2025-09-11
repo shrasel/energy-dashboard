@@ -1,70 +1,142 @@
-# Getting Started with Create React App
+# OHM Energy Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-ready-blue)](https://www.docker.com/)
 
-## Available Scripts
 
-In the project directory, you can run:
+OHM Energy Dashboard is a modern, interactive web application for visualizing and analyzing energy consumption and charges. Built with React, Chart.js, and Docker, it provides detailed insights at monthly, daily, hourly, and 15-minute intervals for utility data analysis.
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- 📊 **Multi-Interval Visualization**: View monthly, daily, hourly, and 15-minute breakdowns of energy usage and cost.
+- 🖥️ **Interactive Charts**: Bar and line charts with tooltips, legends, and click-to-drill-down navigation.
+- 📝 **Summary Cards**: Key metrics including highest month, average cost per kWh, monthly change, and year-to-date totals.
+- 🔍 **Insights & Observations**: Automated insights on seasonal patterns, cost efficiency, and recent usage trends.
+- 🧩 **Responsive Design**: Optimized for desktop and mobile devices.
+- 🐳 **Docker Support**: Easy local and production deployment with Docker and Docker Compose.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Technology Stack
 
-### `npm test`
+- React 19
+- Chart.js 4
+- React Chart.js 2
+- Axios
+- React Router DOM
+- Docker & Docker Compose
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Getting Started
 
-### `npm run build`
+### Prerequisites
+- Node.js v16 or newer
+- npm or yarn
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Clone the repository and install dependencies:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+git clone https://github.com/shrasel/energy-dashboard.git
+cd energy-dashboard
+npm install
+```
 
-### `npm run eject`
+### Running Locally
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+npm start
+```
+Visit `http://localhost:3000` in your browser.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Docker Development
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+docker compose up -d
+```
+App runs at `http://localhost:8888` (dev) or `http://localhost:8080` (prod).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## API Requirements
 
-## Learn More
+The dashboard expects the following API endpoints:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- **Monthly Data:** `GET /api/data/monthly`
+- **Daily Data:** `GET /api/data/daily`
+- **Hourly Data:** `GET /api/data/hourly?date=YYYY-MM-DD`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Example response for hourly data:
 
-### Code Splitting
+```json
+{
+	"data": [
+		{
+			"from_date": "2025-09-10T00:00:00Z",
+			"total_consumption": 1.23,
+			"total_charges": 0.45
+		},
+		// ...more intervals
+	]
+}
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Usage
 
-### Analyzing the Bundle Size
+- Select a month or date range to view daily breakdowns.
+- Click any daily bar to drill down to hourly and 15-minute details.
+- Review summary cards and insights for quick analysis.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Environment Variables
 
-### Making a Progressive Web App
+You can set environment variables in a `.env` file at the project root:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```
+# Example
+REACT_APP_API_URL=http://localhost:3000
+```
 
-### Advanced Configuration
+Refer to `docker-compose.yml` for additional variables used in Docker environments.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Screenshots
 
-### Deployment
+<!-- If available, add screenshots here -->
+<!-- ![Dashboard Screenshot](./public/dashboard-screenshot.png) -->
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Troubleshooting
 
-### `npm run build` fails to minify
+- **API not reachable:** Ensure your backend API is running and accessible at the configured URL.
+- **Port conflicts:** Change the exposed port in `docker-compose.yml` or `.env` as needed.
+- **Chart not rendering:** Check browser console for errors and verify API response format.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Documentation & Demo
+
+- [React Documentation](https://react.dev/)
+- [Chart.js Documentation](https://www.chartjs.org/docs/latest/)
+- <!-- Add link to live demo if available -->
+
+## Project Structure
+
+```
+├── public/                # Static assets and index.html
+├── src/                   # React source code
+│   ├── App.js             # Main dashboard and charts
+│   ├── HourlyDetail.js    # Hourly/interval detail view
+│   ├── ...                # Other components and styles
+├── Dockerfile             # Multi-stage Docker build
+├── docker-compose.yml     # Dev and prod services
+├── package.json           # Project metadata and scripts
+├── .gitignore             # Files to ignore in git
+├── README.md              # Project documentation
+```
+
+## Customization
+
+- Update API endpoints in `src/App.js` and `src/HourlyDetail.js` as needed.
+- Modify styles in `src/App.css` for branding or layout changes.
+
+## Contributing
+
+Contributions are welcome! Please open an issue to discuss major changes before submitting a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
