@@ -572,7 +572,7 @@ useEffect(() => {
           <table>
             <thead>
               <tr>
-                <th>Month</th>
+                <th>Month</th>  
                 <th>Consumption (kWh)</th>
                 <th>Total Charges</th>
                 <th>Days Billed</th>
@@ -580,15 +580,30 @@ useEffect(() => {
               </tr>
             </thead>
             <tbody>
-              {filteredMonthlyData.map((item, index) => (
-                <tr key={index}>
-                  <td>{new Date(item.from_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</td>
-                  <td>{item.total_consumption}</td>
-                  <td>${item.total_charges}</td>
-                  <td>{item.interval_length || 'N/A'}</td>
-                  <td>${(parseFloat(item.total_charges) / parseFloat(item.total_consumption)).toFixed(3)}</td>
-                </tr>
-              ))}
+              {filteredMonthlyData.map((item, index) => {
+                // Safely parse date and numeric fields
+                const date = item?.from_date ? parseApiDate(item.from_date) : null;
+                const monthLabel = date
+                  ? date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                  : 'Unknown';
+
+                const consumption = parseFloat(item?.total_consumption || 0);
+                const charges = parseFloat(item?.total_charges || 0);
+                const daysBilled = item?.interval_length ?? 'N/A';
+
+                // Guard against division by zero for cost per kWh
+                const costPerKwh = consumption > 0 ? (charges / consumption) : 0;
+
+                return (
+                  <tr key={index}>
+                    <td>{monthLabel}</td>
+                    <td>{consumption ? consumption.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</td>
+                    <td>${charges.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>{typeof daysBilled === 'number' || typeof daysBilled === 'string' ? daysBilled : 'N/A'}</td>
+                    <td>${costPerKwh.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
