@@ -1,11 +1,11 @@
-# OHM Energy Dashboard
+# Energy Dashboard
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue)](https://www.docker.com/)
 
 
-OHM Energy Dashboard is a modern, interactive web application for visualizing and analyzing energy consumption and charges. Built with React, Chart.js, and Docker, it provides detailed insights at monthly, daily, hourly, and 15-minute intervals for utility data analysis.
+Energy Dashboard is a modern, interactive web application for visualizing and analyzing energy consumption and charges. Built with React, Chart.js, and Docker, it provides detailed insights at monthly, daily, hourly, and 15-minute intervals for utility data analysis.
 
 ## Features
 
