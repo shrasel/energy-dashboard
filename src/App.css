@@ -89,6 +89,13 @@ body {
   width: 100%;
 }
 
+/* Make chart bars show a pointer cursor to indicate clickability */
+.apexcharts-bar-series .apexcharts-series .apexcharts-series-0 .apexcharts-bar-area,
+.apexcharts-bar-series .apexcharts-series .apexcharts-bar-area,
+.apexcharts-bar-area {
+  cursor: pointer;
+}
+
 .date-range {
   margin: 15px 0;
   display: flex;

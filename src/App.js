@@ -279,22 +279,25 @@ useEffect(() => {
   ];
 
   const monthKey = (d) => `${d.getFullYear()}-${d.getMonth()}`;
-  const monthColorMap = new Map();
-  const monthLegends = [];
 
-  filteredDailyData.forEach(item => {
-    const d = parseApiDate(item.from_date);
-    const key = monthKey(d);
-    if (!monthColorMap.has(key)) {
-      const color = colorPalette[monthColorMap.size % colorPalette.length];
-      monthColorMap.set(key, color);
-      monthLegends.push({
-        key,
-        label: d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        color
-      });
-    }
-  });
+  const { monthLegends, dailyColors } = React.useMemo(() => {
+    const map = new Map();
+    const legends = [];
+    const perPoint = [];
+
+    filteredDailyData.forEach(item => {
+      const d = parseApiDate(item.from_date);
+      const key = monthKey(d);
+      if (!map.has(key)) {
+        const color = colorPalette[map.size % colorPalette.length];
+        map.set(key, color);
+        legends.push({ key, label: d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }), color });
+      }
+      perPoint.push(map.get(key));
+    });
+
+    return { monthLegends: legends, dailyColors: perPoint };
+  }, [filteredDailyData, colorPalette]);
 
   // ApexCharts: daily series and options (column + line, dual y-axes)
   const dailyLabels = filteredDailyData.map(item => 
@@ -333,7 +336,7 @@ useEffect(() => {
       }
     },
     stroke: { width: [0, 3] },
-    plotOptions: { bar: { columnWidth: '60%' } },
+  plotOptions: { bar: { columnWidth: '60%', distributed: true } },
     dataLabels: { enabled: false },
     xaxis: { categories: dailyLabels },
     yaxis: [
@@ -349,7 +352,7 @@ useEffect(() => {
         }
       }
     },
-    colors: [ '#3498db', '#2ecc71' ]
+    colors: dailyColors.length ? dailyColors : ['#3498db', '#2ecc71']
   };
 
   // Totals for the current filtered daily range
