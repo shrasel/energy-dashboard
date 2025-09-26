@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Chart } from 'react-chartjs-2';
+import ReactApexChart from 'react-apexcharts';
 import './App.css';
 
 function HourlyDetail() {
@@ -32,6 +32,7 @@ function HourlyDetail() {
   const [hourlyData, setHourlyData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [chartReady, setChartReady] = useState(false);
 
   useEffect(() => {
     const fetchHourlyData = async () => {
@@ -51,30 +52,52 @@ function HourlyDetail() {
     }
   }, [date]);
 
-  // Process hourly data for chart
-  const hourlyChartData = {
-    labels: hourlyData.map(item => formatTimeInterval(item.from_date)),
-    datasets: [
-      {
-        label: '15-min Consumption (kWh)',
-        data: hourlyData.map(item => parseFloat(item.total_consumption || item.consumption || 0)),
-        backgroundColor: 'rgba(52, 152, 219, 0.7)',
-        borderColor: 'rgba(52, 152, 219, 1)',
-        borderWidth: 1,
-        yAxisID: 'y',
-      },
-      {
-        label: '15-min Charges ($)',
-        data: hourlyData.map(item => parseFloat(item.total_charges || item.charges || 0)),
-        backgroundColor: 'rgba(46, 204, 113, 0.2)',
-        borderColor: 'rgba(46, 204, 113, 1)',
-        borderWidth: 2,
-        type: 'line',
-        yAxisID: 'y1',
-        pointRadius: 3,
-        fill: false,
+  // Ensure chart renders only after the component has mounted and data loaded
+  useEffect(() => {
+    if (!loading) {
+      // small timeout to allow DOM to settle before ApexCharts measures elements
+      const t = setTimeout(() => setChartReady(true), 50);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [loading]);
+
+  // Process hourly data for ApexCharts
+  const hourlyLabels = hourlyData.map(item => formatTimeInterval(item.from_date));
+  const hourlySeries = [
+    {
+      name: '15-min Consumption (kWh)',
+      type: 'bar',
+      data: hourlyData.map(item => parseFloat(item.total_consumption || item.consumption || 0))
+    },
+    {
+      name: '15-min Charges ($)',
+      type: 'line',
+      data: hourlyData.map(item => parseFloat(item.total_charges || item.charges || 0))
+    }
+  ];
+
+  const hourlyOptions = {
+    chart: { type: 'line', height: 320, toolbar: { show: true } },
+    stroke: { width: [0, 2] },
+    plotOptions: { bar: { columnWidth: '60%' } },
+    dataLabels: { enabled: false },
+    xaxis: { categories: hourlyLabels },
+    yaxis: [
+      { title: { text: 'Consumption (kWh)' }, labels: { formatter: val => Number(val).toLocaleString('en-US', { maximumFractionDigits: 3 }) } },
+      { opposite: true, title: { text: 'Charges ($)' }, labels: { formatter: val => '$' + Number(val).toLocaleString('en-US', { maximumFractionDigits: 2 }) } }
+    ],
+    tooltip: {
+      shared: true,
+      y: {
+        formatter: (val, { seriesIndex }) => {
+          if (seriesIndex === 0) return `${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 })} kWh`;
+          return `$${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
       }
-    ]
+    },
+    colors: ['#3498db', '#2ecc71'],
+    legend: { position: 'top' }
   };
 
   // Calculate totals
@@ -163,64 +186,13 @@ function HourlyDetail() {
           </div>
         </div>
         <div className="chart-wrapper">
-          <Chart 
-            type='bar'
-            data={hourlyChartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                title: { display: false },
-                legend: {
-                  position: 'top',
-                  labels: {
-                    boxWidth: 12
-                  }
-                },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      let label = context.dataset.label || '';
-                      if (label) label += ': ';
-                      if (context.datasetIndex === 0) {
-                        label += context.raw.toFixed(2) + ' kWh';
-                      } else {
-                        label += '$' + context.raw.toFixed(2);
-                      }
-                      return label;
-                    }
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  type: 'linear',
-                  display: true,
-                  position: 'left',
-                  title: { 
-                    display: true, 
-                    text: 'Consumption (kWh)',
-                    font: {
-                      weight: 'bold'
-                    }
-                  }
-                },
-                y1: {
-                  type: 'linear',
-                  display: true,
-                  position: 'right',
-                  title: { 
-                    display: true, 
-                    text: 'Charges ($)',
-                    font: {
-                      weight: 'bold'
-                    }
-                  },
-                  grid: { drawOnChartArea: false }
-                }
-              }
-            }}
-          />
+          {chartReady && hourlySeries[0].data.length > 0 ? (
+            <ReactApexChart options={hourlyOptions} series={hourlySeries} type="line" height={320} />
+          ) : (
+            <div style={{ padding: 24, color: '#666' }}>
+              {loading ? 'Preparing chart...' : 'No hourly data available for this date.'}
+            </div>
+          )}
         </div>
       </div>
 

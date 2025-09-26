@@ -81,8 +81,12 @@ body {
 }
 
 .chart-wrapper {
-  height: 300px;
+  /* Use min-height so charts can grow/shrink naturally with their container
+     and avoid clipping on different screen sizes. Remove fixed height. */
+  min-height: 300px;
+  height: auto;
   margin-top: 20px;
+  width: 100%;
 }
 
 .date-range {
@@ -210,6 +214,59 @@ tr:hover {
   font-size: 14px;
   background-color: white;
   min-width: 180px;
+}
+
+/* Table controls */
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #3498db;
+  color: white;
+}
+
+.btn.secondary {
+  background: #2ecc71;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.page-input {
+  width: 60px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+/* Trend bar */
+.trend-bar {
+  height: 12px;
+  background: linear-gradient(90deg, #e0f3ff, #b3e5ff);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.trend-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
 }
 
 /* Date Range Styles */

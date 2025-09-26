@@ -1,35 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Chart } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  BarController,
-  BarElement,
-  LineController,
-  LineElement,
-  PointElement,
-  LinearScale,
-  CategoryScale,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
+import ReactApexChart from 'react-apexcharts';
 import './App.css';
 
-// Register ChartJS components
-ChartJS.register(
-  BarController,
-  BarElement,
-  LineController,
-  LineElement,
-  PointElement,
-  LinearScale,
-  CategoryScale,
-  Title,
-  Tooltip,
-  Legend
-);
+// Using ApexCharts for richer visuals
 
 function App() {
   const navigate = useNavigate();
@@ -227,29 +202,68 @@ useEffect(() => {
     URL.revokeObjectURL(url);
   };
 
-  // Process data for monthly chart
-  const monthlyChartData = {
-    labels: filteredMonthlyData.map(item => 
-      parseApiDate(item.from_date).toLocaleDateString('en-US', { month: 'short' })),
-    datasets: [
+  // ApexCharts: monthly series and options (column + line)
+  const monthlyLabels = filteredMonthlyData.map(item => 
+    parseApiDate(item.from_date).toLocaleDateString('en-US', { month: 'short' }));
+
+  const monthlySeries = [
+    {
+      name: 'Consumption (kWh)',
+      type: 'column',
+      data: filteredMonthlyData.map(item => parseFloat(item.total_consumption) || 0)
+    },
+    {
+      name: 'Total Charges ($)',
+      type: 'line',
+      data: filteredMonthlyData.map(item => parseFloat(item.total_charges) || 0)
+    }
+  ];
+  // Calculate nice axis ranges so the dual axes don't make the chart look squashed
+  const consumptionValues = monthlySeries[0].data || [];
+  const chargesValues = monthlySeries[1].data || [];
+  const maxConsumption = consumptionValues.length ? Math.max(...consumptionValues) : 0;
+  const maxCharges = chargesValues.length ? Math.max(...chargesValues) : 0;
+  const y0Max = Math.ceil(maxConsumption * 1.12) || 10;
+  const y1Max = Math.ceil(maxCharges * 1.12) || 1;
+
+  const monthlyOptions = {
+    chart: { height: 360, type: 'line', toolbar: { show: true } },
+    stroke: { width: [0, 3] },
+    plotOptions: { bar: { columnWidth: '50%' } },
+    dataLabels: { enabled: false },
+    xaxis: { categories: monthlyLabels },
+    yaxis: [
       {
-        label: 'Consumption (kWh)',
-        data: filteredMonthlyData.map(item => parseFloat(item.total_consumption)),
-        backgroundColor: 'rgba(52, 152, 219, 0.7)',
-        borderColor: 'rgba(52, 152, 219, 1)',
-        borderWidth: 1,
-        yAxisID: 'y',
+        title: { text: 'Consumption (kWh)' },
+        min: 0,
+        max: y0Max,
+        tickAmount: 6,
+        labels: {
+          formatter: val => Number(val).toLocaleString('en-US', { maximumFractionDigits: 0 })
+        }
       },
       {
-        label: 'Total Charges ($)',
-        data: filteredMonthlyData.map(item => parseFloat(item.total_charges)),
-        backgroundColor: 'rgba(46, 204, 113, 0.7)',
-        borderColor: 'rgba(46, 204, 113, 1)',
-        borderWidth: 1,
-        type: 'line',
-        yAxisID: 'y1',
+        opposite: true,
+        title: { text: 'Total Charges ($)' },
+        min: 0,
+        max: y1Max,
+        tickAmount: 6,
+        labels: {
+          formatter: val => '$' + Number(val).toLocaleString('en-US', { maximumFractionDigits: 2 })
+        }
       }
-    ]
+    ],
+    tooltip: {
+      shared: true,
+      y: {
+        formatter: (val, { seriesIndex }) => {
+          if (seriesIndex === 0) return `${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kWh`;
+          return `$${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+      }
+    },
+    colors: [ '#2b8be6', '#28c76f' ],
+    legend: { position: 'top' }
   };
 
   // Process daily data for charts (filtered by date range)
@@ -282,46 +296,60 @@ useEffect(() => {
     }
   });
 
-  const barBgColors = filteredDailyData.map(item => {
-    const d = parseApiDate(item.from_date);
-    const col = monthColorMap.get(monthKey(d)) || colorPalette[0];
-    // Convert hex to rgba with alpha 0.7 for background
-    const r = parseInt(col.slice(1,3), 16);
-    const g = parseInt(col.slice(3,5), 16);
-    const b = parseInt(col.slice(5,7), 16);
-    return `rgba(${r}, ${g}, ${b}, 0.7)`;
-  });
-  const barBorderColors = filteredDailyData.map(item => {
-    const d = parseApiDate(item.from_date);
-    const col = monthColorMap.get(monthKey(d)) || colorPalette[0];
-    return col;
-  });
+  // ApexCharts: daily series and options (column + line, dual y-axes)
+  const dailyLabels = filteredDailyData.map(item => 
+    parseApiDate(item.from_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }));
 
-  // Updated dailyChartData to match monthlyChartData (bar + line, dual y-axes)
-  const dailyChartData = {
-    labels: filteredDailyData.map(item => 
-      parseApiDate(item.from_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })),
-    datasets: [
-      {
-        label: 'Daily Consumption (kWh)',
-  data: filteredDailyData.map(item => parseFloat(item.total_consumption)),
-  backgroundColor: barBgColors,
-  borderColor: barBorderColors,
-        borderWidth: 1,
-        yAxisID: 'y',
-      },
-      {
-        label: 'Total Charges ($)',
-        data: filteredDailyData.map(item => parseFloat(item.total_charges)),
-        backgroundColor: 'rgba(46, 204, 113, 0.2)',
-        borderColor: 'rgba(46, 204, 113, 1)',
-        borderWidth: 2,
-        type: 'line',
-        yAxisID: 'y1',
-        pointRadius: 3,
-        fill: false,
+  const dailySeries = [
+    {
+      name: 'Daily Consumption (kWh)',
+      type: 'column',
+      data: filteredDailyData.map(item => parseFloat(item.total_consumption) || 0)
+    },
+    {
+      name: 'Total Charges ($)',
+      type: 'line',
+      data: filteredDailyData.map(item => parseFloat(item.total_charges) || 0)
+    }
+  ];
+
+  const dailyOptions = {
+    chart: {
+      height: 340,
+      type: 'line',
+      toolbar: { show: true },
+      events: {
+        dataPointSelection: (event, chartContext, config) => {
+          const idx = config.dataPointIndex;
+          const item = filteredDailyData[idx];
+          if (!item) return;
+          const date = parseApiDate(item.from_date);
+          const formattedDate = date.toISOString().split('T')[0];
+          // Delay navigation by a tick so ApexCharts can finish any DOM work
+          // (measuring/animations) before React unmounts the chart. This avoids
+          // intermittent getBoundingClientRect null errors in the chart library.
+          setTimeout(() => navigate(`/hourly/${formattedDate}`), 30);
+        }
       }
-    ]
+    },
+    stroke: { width: [0, 3] },
+    plotOptions: { bar: { columnWidth: '60%' } },
+    dataLabels: { enabled: false },
+    xaxis: { categories: dailyLabels },
+    yaxis: [
+      { title: { text: 'Consumption (kWh)' }, labels: { formatter: val => Number(val).toLocaleString('en-US', { maximumFractionDigits: 0 }) } },
+      { opposite: true, title: { text: 'Total Charges ($)' }, labels: { formatter: val => '$' + Number(val).toLocaleString('en-US', { maximumFractionDigits: 2 }) } }
+    ],
+    tooltip: {
+      shared: true,
+      y: {
+        formatter: (val, { seriesIndex }) => {
+          if (seriesIndex === 0) return `${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kWh`;
+          return `$${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+      }
+    },
+    colors: [ '#3498db', '#2ecc71' ]
   };
 
   // Totals for the current filtered daily range
@@ -370,18 +398,6 @@ useEffect(() => {
     parseFloat(item.total_consumption) > parseFloat(max?.total_consumption ?? 0) ? item : max
   , monthlyData[0] || {});
 
-  // Handle daily bar click to navigate to hourly detail
-  const handleDailyBarClick = (event, elements, chart) => {
-    if (!elements?.length) return;
-    const idx = elements[0].index;
-    const item = filteredDailyData[idx];
-    if (!item) return;
-    
-    // Format date as YYYY-MM-DD for the API
-    const date = parseApiDate(item.from_date);
-    const formattedDate = date.toISOString().split('T')[0];
-    navigate(`/hourly/${formattedDate}`);
-  };
 
   // Handle month selection for daily chart
   const handleMonthChange = (monthValue) => {
@@ -493,75 +509,7 @@ useEffect(() => {
           )}
         </div>
         <div className="chart-wrapper">
-          <Chart 
-            type='bar'
-            data={dailyChartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              onClick: handleDailyBarClick,
-              onHover: (event, elements) => {
-                event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-              },
-              plugins: {
-                title: { display: false },
-                legend: {
-                  position: 'top',
-                  labels: {
-                    boxWidth: 12
-                  }
-                },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      let label = context.dataset.label || '';
-                      if (label) label += ': ';
-                      if (context.datasetIndex === 0) {
-                        label += context.raw.toFixed(2) + ' kWh';
-                      } else {
-                        label += '$' + context.raw.toFixed(2);
-                      }
-                      return label;
-                    },
-                    afterLabel: function(context) {
-                      if (context.datasetIndex === 0) {
-                        const cost = filteredDailyData[context.dataIndex].total_charges;
-                        return `Cost: $${parseFloat(cost).toFixed(2)}`;
-                      }
-                      return '';
-                    }
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  type: 'linear',
-                  display: true,
-                  position: 'left',
-                  title: { 
-                    display: true, 
-                    text: 'Consumption (kWh)',
-                    font: {
-                      weight: 'bold'
-                    }
-                  }
-                },
-                y1: {
-                  type: 'linear',
-                  display: true,
-                  position: 'right',
-                  title: { 
-                    display: true, 
-                    text: 'Total Charges ($)',
-                    font: {
-                      weight: 'bold'
-                    }
-                  },
-                  grid: { drawOnChartArea: false }
-                }
-              }
-            }}
-          />
+          <ReactApexChart options={dailyOptions} series={dailySeries} type="line" height={340} />
         </div>
       </div>
       <div className="spacer" style={{ height: 32 }}></div>
@@ -583,64 +531,7 @@ useEffect(() => {
           </select>
         </div>
         <div className="chart-wrapper">
-          <Chart 
-            type='bar'
-            data={monthlyChartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                title: { display: false },
-                legend: {
-                  position: 'top',
-                  labels: {
-                    boxWidth: 12
-                  }
-                },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      let label = context.dataset.label || '';
-                      if (label) label += ': ';
-                      if (context.datasetIndex === 0) {
-                        label += context.raw.toFixed(2) + ' kWh';
-                      } else {
-                        label += '$' + context.raw.toFixed(2);
-                      }
-                      return label;
-                    }
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  type: 'linear',
-                  display: true,
-                  position: 'left',
-                  title: { 
-                    display: true, 
-                    text: 'Consumption (kWh)',
-                    font: {
-                      weight: 'bold'
-                    }
-                  }
-                },
-                y1: {
-                  type: 'linear',
-                  display: true,
-                  position: 'right',
-                  title: { 
-                    display: true, 
-                    text: 'Total Charges ($)',
-                    font: {
-                      weight: 'bold'
-                    }
-                  },
-                  grid: { drawOnChartArea: false }
-                }
-              }
-            }}
-          />
+          <ReactApexChart options={monthlyOptions} series={monthlySeries} type="line" height={360} />
         </div>
       </div>
       
