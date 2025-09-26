@@ -53,6 +53,10 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [availableYears, setAvailableYears] = useState([]);
   const [availableMonths, setAvailableMonths] = useState([]);
+  // Table UI states
+  const [sortConfig, setSortConfig] = useState({ key: 'from_date', direction: 'desc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(8);
 
   // Update the useEffect hook where availableMonths is calculated
 useEffect(() => {
@@ -148,6 +152,80 @@ useEffect(() => {
     ? monthlyData.filter(item => 
         parseApiDate(item.from_date).getFullYear() === selectedYear)
     : monthlyData; // Show all data if no year selected
+
+  // Sorting helper for the table
+  const sortedMonthly = React.useMemo(() => {
+    const items = [...filteredMonthlyData].map(item => ({
+      ...item,
+      _dateObj: item.from_date ? parseApiDate(item.from_date) : null,
+      _consumption: parseFloat(item.total_consumption || 0),
+      _charges: parseFloat(item.total_charges || 0)
+    }));
+
+    if (!sortConfig?.key) return items;
+
+    items.sort((a, b) => {
+      const key = sortConfig.key;
+      let av = a[key];
+      let bv = b[key];
+
+      // support special keys
+      if (key === 'from_date') { av = a._dateObj; bv = b._dateObj; }
+      if (key === 'total_consumption') { av = a._consumption; bv = b._consumption; }
+      if (key === 'total_charges') { av = a._charges; bv = b._charges; }
+
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+
+      if (av < bv) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (av > bv) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return items;
+  }, [filteredMonthlyData, sortConfig]);
+
+  // Pagination slice
+  const paginatedMonthly = React.useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    return sortedMonthly.slice(start, start + rowsPerPage);
+  }, [sortedMonthly, currentPage, rowsPerPage]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedMonthly.length / rowsPerPage));
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    setCurrentPage(1);
+  };
+
+  // CSV export helper
+  const exportCsv = () => {
+    const headers = ['Month','Consumption (kWh)','Total Charges','Days Billed','Cost per kWh'];
+    const rows = sortedMonthly.map(item => {
+      const date = item._dateObj ? item._dateObj.toISOString().split('T')[0] : '';
+      const consumption = item._consumption.toFixed(2);
+      const charges = item._charges.toFixed(2);
+      const days = item.interval_length ?? '';
+      const cost = item._consumption > 0 ? (item._charges / item._consumption).toFixed(3) : '0.000';
+      return [date, consumption, charges, days, cost];
+    });
+
+    const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `monthly-data-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   // Process data for monthly chart
   const monthlyChartData = {
@@ -257,12 +335,12 @@ useEffect(() => {
   );
 
   // Calculate summary metrics (robust by date and with guards)
-  const sortedMonthly = [...monthlyData]
+  const dateSortedMonthly = [...monthlyData]
     .filter(item => item && item.from_date)
     .sort((a, b) => parseApiDate(a.from_date) - parseApiDate(b.from_date));
 
-  const lastMonthEntry = sortedMonthly[sortedMonthly.length - 1] || null;
-  const prevMonthEntry = sortedMonthly[sortedMonthly.length - 2] || null;
+  const lastMonthEntry = dateSortedMonthly[dateSortedMonthly.length - 1] || null;
+  const prevMonthEntry = dateSortedMonthly[dateSortedMonthly.length - 2] || null;
 
   // Keep currentMonthData for UI sections that reference it
   const currentMonthData = lastMonthEntry || {};
@@ -568,44 +646,79 @@ useEffect(() => {
       
       <div className="data-table">
         <h2>Detailed Data ({selectedYear ? selectedYear : 'All Years'} - {filteredMonthlyData.length} records)</h2>
+        <div className="table-controls">
+          <div className="table-actions">
+            <button className="btn" onClick={exportCsv}>Export CSV</button>
+            <button className="btn secondary" onClick={() => { setSortConfig({ key: 'total_consumption', direction: 'desc' }); setCurrentPage(1); }}>Sort by Consumption</button>
+          </div>
+          <div>
+            <label>Rows per page: </label>
+            <select className="page-input" value={rowsPerPage} onChange={e => { setRowsPerPage(parseInt(e.target.value)); setCurrentPage(1); }}>
+              <option value={5}>5</option>
+              <option value={8}>8</option>
+              <option value={12}>12</option>
+            </select>
+          </div>
+        </div>
+
         <div className="table-container">
           <table>
             <thead>
               <tr>
-                <th>Month</th>  
-                <th>Consumption (kWh)</th>
-                <th>Total Charges</th>
+                <th onClick={() => requestSort('from_date')} style={{ cursor: 'pointer' }}>Month {sortConfig.key === 'from_date' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}</th>
+                <th onClick={() => requestSort('total_consumption')} style={{ cursor: 'pointer' }}>Consumption (kWh) {sortConfig.key === 'total_consumption' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}</th>
+                <th onClick={() => requestSort('total_charges')} style={{ cursor: 'pointer' }}>Total Charges {sortConfig.key === 'total_charges' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}</th>
                 <th>Days Billed</th>
                 <th>Cost per kWh</th>
+                <th>Trend</th>
               </tr>
             </thead>
             <tbody>
-              {filteredMonthlyData.map((item, index) => {
-                // Safely parse date and numeric fields
-                const date = item?.from_date ? parseApiDate(item.from_date) : null;
+              {paginatedMonthly.map((item, index) => {
+                const date = item?._dateObj ?? (item.from_date ? parseApiDate(item.from_date) : null);
                 const monthLabel = date
                   ? date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
                   : 'Unknown';
 
-                const consumption = parseFloat(item?.total_consumption || 0);
-                const charges = parseFloat(item?.total_charges || 0);
+                const consumption = typeof item._consumption === 'number' ? item._consumption : parseFloat(item?.total_consumption || 0);
+                const charges = typeof item._charges === 'number' ? item._charges : parseFloat(item?.total_charges || 0);
                 const daysBilled = item?.interval_length ?? 'N/A';
-
-                // Guard against division by zero for cost per kWh
                 const costPerKwh = consumption > 0 ? (charges / consumption) : 0;
+
+                // Simple trend: percent of highest month consumption
+                const highest = Math.max(...monthlyData.map(m => parseFloat(m.total_consumption || 0)), 1);
+                const trendPct = Math.min(100, Math.round((consumption / highest) * 100));
 
                 return (
                   <tr key={index}>
                     <td>{monthLabel}</td>
-                    <td>{consumption ? consumption.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</td>
+                    <td>{consumption.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>${charges.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>{typeof daysBilled === 'number' || typeof daysBilled === 'string' ? daysBilled : 'N/A'}</td>
                     <td>${costPerKwh.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
+                    <td>
+                      <div className="trend-bar">
+                        <div className="trend-fill" style={{ width: `${trendPct}%` }} />
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+            <div className="pagination">
+              <button className="btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>First</button>
+              <button className="btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</button>
+              <span>Page {currentPage} / {totalPages}</span>
+              <button className="btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</button>
+              <button className="btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>Last</button>
+            </div>
+            <div>
+              <small>{sortedMonthly.length} records total</small>
+            </div>
+          </div>
         </div>
       </div>
       
