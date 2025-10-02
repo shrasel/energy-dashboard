@@ -253,9 +253,12 @@ useEffect(() => {
   };
 
   // Process daily data for charts (filtered by date range)
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+  const endOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
   const filteredDailyData = dailyData.filter(item => {
     const date = parseApiDate(item.from_date);
-    return date >= dateRange.start && date <= dateRange.end;
+    return date >= startOfDay(dateRange.start) && date <= endOfDay(dateRange.end);
   }).reverse();
 
   // Build per-month color mapping for the filtered daily range
@@ -389,11 +392,9 @@ useEffect(() => {
     if (selected) {
       setSelectedMonth(selected);
       const startDate = new Date(selected.year, selected.month, 1);
-      const endDate = new Date(selected.year, selected.month + 1, 0);
-      setDateRange({
-        start: startDate,
-        end: endDate
-      });
+      // use end of day for the month end so inclusive comparisons don't drop the last day
+      const endDate = new Date(selected.year, selected.month + 1, 0, 23, 59, 59, 999);
+      setDateRange({ start: startDate, end: endDate });
     }
   };
 
