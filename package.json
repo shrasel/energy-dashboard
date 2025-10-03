@@ -3,27 +3,43 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@angular/animations": "^17.3.12",
+    "@angular/common": "^17.3.12",
+    "@angular/compiler": "^17.3.12",
+    "@angular/core": "^17.3.12",
+    "@angular/forms": "^17.3.12",
+    "@angular/platform-browser": "^17.3.12",
+    "@angular/platform-browser-dynamic": "^17.3.12",
+    "@angular/router": "^17.3.12",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "apexcharts": "^4.2.0",
     "axios": "^1.9.0",
     "chart.js": "^4.4.9",
+    "ng2-charts": "^5.0.4",
     "react": "^19.1.0",
+    "react-apexcharts": "^1.7.0",
     "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^8.4.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^6.26.1",
     "react-scripts": "5.0.1",
-  "apexcharts": "^4.2.0",
-  "react-apexcharts": "^1.7.0",
-    "web-vitals": "^2.1.4"
+    "rxjs": "^7.8.2",
+    "tslib": "^2.8.1",
+    "web-vitals": "^2.1.4",
+    "zone.js": "^0.14.10"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "start:react": "react-scripts start",
+    "build:react": "react-scripts build",
+    "test:react": "react-scripts test"
   },
   "eslintConfig": {
     "extends": [
@@ -42,5 +58,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.3.17",
+    "@angular/cli": "^17.3.17",
+    "@angular/compiler-cli": "^17.3.12",
+    "typescript": "~5.2.2"
   }
 }

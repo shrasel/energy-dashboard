@@ -1,0 +1,61 @@
+<div *ngIf="loading" class="loading">Loading hourly data...</div>
+<div *ngIf="error" class="error">Error: {{ error }}</div>
+
+<div *ngIf="!loading && !error" class="dashboard">
+  <header class="header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button 
+        (click)="goBack()"
+        style="background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;"
+      >
+        ← Back to Dashboard
+      </button>
+      <div>
+        <h1>Hourly Consumption Detail</h1>
+        <div class="last-updated">{{ formattedDate }}</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Summary cards for the day -->
+  <div class="summary-cards">
+    <div class="card">
+      <h3>Total Daily Consumption</h3>
+      <div class="value">{{ totalHourlyKwh.toFixed(2) }} kWh</div>
+      <div class="subtext">Sum of 24 hours</div>
+    </div>
+    <div class="card">
+      <h3>Total Daily Charges</h3>
+      <div class="value">${{ totalHourlyCharges.toFixed(2) }}</div>
+      <div class="subtext">Sum of 24 hours</div>
+    </div>
+    <div class="card">
+      <h3>Average Hourly Usage</h3>
+      <div class="value">{{ averageHourlyUsage.toFixed(2) }} kWh</div>
+      <div class="subtext">Per hour average</div>
+    </div>
+    <div class="card">
+      <h3>Peak Hour</h3>
+      <div class="value">{{ peakHour }}</div>
+      <div class="subtext">Highest consumption interval</div>
+    </div>
+  </div>
+
+  <!-- Hourly Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h2>Hourly Consumption</h2>
+      <div style="font-size: 14px; color: #666;">
+        Total: {{ totalHourlyKwh.toFixed(2) }} kWh | ${{ totalHourlyCharges.toFixed(2) }}
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas 
+        baseChart
+        [data]="hourlyChartData"
+        [options]="hourlyChartOptions"
+        [type]="chartType">
+      </canvas>
+    </div>
+  </div>
+</div>

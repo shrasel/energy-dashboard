@@ -1,0 +1,205 @@
+<div *ngIf="loading" class="loading">Loading...</div>
+<div *ngIf="error" class="error">Error: {{ error }}</div>
+
+<div *ngIf="!loading && !error" class="dashboard">
+  <header class="header">
+    <h1>Energy Consumption Dashboard</h1>
+    <div class="last-updated">Last Updated: {{ currentDate }}</div>
+  </header>
+  
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="card">
+      <h3>
+        Highest Month (
+          {{ parseApiDate(highestMonthData.from_date).toLocaleDateString('en-US', { month: 'short' }) }}
+        )
+      </h3>
+      <div class="value">{{ highestMonthData.total_consumption }} kWh</div>
+      <div class="subtext">${{ highestMonthData.total_charges }} total charges</div>
+    </div>
+    <div class="card">
+      <h3>Avg Cost per kWh</h3>
+      <div class="value">${{ avgCostPerKwh }}</div>
+      <div class="subtext">Year-to-date average</div>
+    </div>
+    <div class="card">
+      <h3>Monthly Change</h3>
+      <div
+        class="value"
+        [style.color]="monthlyChange !== null && parseFloat(monthlyChange) < 0 ? '#2ecc71' : '#e74c3c'"
+      >
+        {{ monthlyChange !== null ? monthlyChange + '%' : 'N/A' }}
+      </div>
+      <div class="subtext">Vs previous month (consumption)</div>
+    </div>
+    <div class="card">
+      <h3>Year-to-Date</h3>
+      <div class="value">{{ ytdConsumption.toFixed(2) }} kWh</div>
+      <div class="subtext">${{ ytdCharges.toFixed(2) }} total charges</div>
+    </div>
+  </div>
+  
+  <!-- Daily Chart -->
+  <div class="chart-card">
+    <div class="chart-header" style="flex-direction: column; align-items: flex-start;">
+      <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div>
+          <h2>Daily Consumption</h2>
+          <div style="font-size: 12px; color: #666; margin-top: 2px;">
+            Click on any bar to view hourly details
+          </div>
+        </div>
+        <div class="filter-group">
+          <select 
+            class="month-selector"
+            [value]="selectedMonth?.value"
+            (change)="handleMonthChange($any($event.target).value)"
+          >
+            <option *ngFor="let month of availableMonths" [value]="month.value">
+              {{ month.label }}
+            </option>
+          </select>
+          <div class="date-range">
+            <label>From: </label>
+            <input 
+              type="date" 
+              [value]="formatDate(dateRange.start)"
+              (change)="onStartDateChange($event)"
+            />
+            <label> To: </label>
+            <input 
+              type="date" 
+              [value]="formatDate(dateRange.end)"
+              (change)="onEndDateChange($event)"
+            />
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 8px; font-weight: 500; color: #2c3e50;">
+        Total: {{ totalDailyKwh.toFixed(2) }} kWh | ${{ totalDailyCharges.toFixed(2) }}
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas 
+        baseChart
+        [data]="dailyChartData"
+        [options]="dailyChartOptions"
+        [type]="chartType">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="spacer" style="height: 32px;"></div>
+
+  <!-- Monthly Chart with Year Dropdown -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h2>Monthly Energy Consumption & Cost ({{ filteredMonthlyData.length }} months)</h2>
+      <select 
+        class="year-selector"
+        [value]="selectedYear || ''"
+        (change)="onYearChange($any($event.target).value)"
+      >
+        <option value="">All Years</option>
+        <option *ngFor="let year of availableYears" [value]="year">
+          {{ year }}
+        </option>
+      </select>
+    </div>
+    <div class="chart-wrapper">
+      <canvas 
+        baseChart
+        [data]="monthlyChartData"
+        [options]="monthlyChartOptions"
+        [type]="chartType">
+      </canvas>
+    </div>
+  </div>
+  
+  <!-- Data Table -->
+  <div class="data-table">
+    <h2>Detailed Data ({{ selectedYear ? selectedYear : 'All Years' }} - {{ filteredMonthlyData.length }} records)</h2>
+    <div class="table-controls">
+      <div class="table-actions">
+        <button class="btn" (click)="exportCsv()">Export CSV</button>
+        <button class="btn secondary" (click)="sortByConsumption()">Sort by Consumption</button>
+      </div>
+      <div>
+        <label>Rows per page: </label>
+        <select class="page-input" [value]="rowsPerPage" (change)="setRowsPerPage(+$any($event.target).value)">
+          <option value="5">5</option>
+          <option value="8">8</option>
+          <option value="12">12</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th (click)="requestSort('from_date')" style="cursor: pointer;">
+              Month {{ sortConfig.key === 'from_date' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '' }}
+            </th>
+            <th (click)="requestSort('total_consumption')" style="cursor: pointer;">
+              Consumption (kWh) {{ sortConfig.key === 'total_consumption' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '' }}
+            </th>
+            <th (click)="requestSort('total_charges')" style="cursor: pointer;">
+              Total Charges {{ sortConfig.key === 'total_charges' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '' }}
+            </th>
+            <th>Days Billed</th>
+            <th>Cost per kWh</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of paginatedMonthly">
+            <td>{{ parseApiDate(item.from_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }}</td>
+            <td>{{ item._consumption.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
+            <td>${{ item._charges.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
+            <td>{{ item.interval_length ?? 'N/A' }}</td>
+            <td>${{ getCostPerKwh(item._consumption, item._charges).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) }}</td>
+            <td>
+              <div class="trend-bar">
+                <div class="trend-fill" [style.width.%]="getTrendPercentage(item._consumption)"></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+        <div class="pagination">
+          <button class="btn" (click)="setPage(1)" [disabled]="currentPage === 1">First</button>
+          <button class="btn" (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1">Prev</button>
+          <span>Page {{ currentPage }} / {{ totalPages }}</span>
+          <button class="btn" (click)="setPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+          <button class="btn" (click)="setPage(totalPages)" [disabled]="currentPage === totalPages">Last</button>
+        </div>
+        <div>
+          <small>{{ sortedMonthly.length }} records total</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Insights -->
+  <div class="insights">
+    <h2>Insights & Observations</h2>
+    <div class="insight-item">
+      <h3>Seasonal Pattern Detected</h3>
+      <p>Highest usage occurs in winter months (Jan-Feb), with consumption decreasing through spring. 
+      January showed the highest consumption at {{ monthlyData[monthlyData.length - 1]?.total_consumption || 'N/A' }} kWh.</p>
+    </div>
+    <div class="insight-item">
+      <h3>Recent Usage</h3>
+      <p>Current month shows {{ currentMonthData.total_consumption }} kWh consumption, which is 
+      {{ monthlyChange && parseFloat(monthlyChange) > 0 ? ' an increase' : ' a decrease' }} of {{ monthlyChange ? Math.abs(parseFloat(monthlyChange)) : 0 }}% compared to previous month.</p>
+    </div>
+    <div class="insight-item">
+      <h3>Cost Efficiency</h3>
+      <p>Your average cost per kWh is ${{ avgCostPerKwh }}, with year-to-date spending totaling ${{ ytdCharges.toFixed(2) }}.</p>
+    </div>
+  </div>
+</div>
