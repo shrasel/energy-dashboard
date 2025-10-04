@@ -708,15 +708,27 @@ useEffect(() => {
             </tbody>
           </table>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+          <div className="pagination-wrapper">
             <div className="pagination">
-              <button className="btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>First</button>
-              <button className="btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</button>
-              <span>Page {currentPage} / {totalPages}</span>
-              <button className="btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</button>
-              <button className="btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>Last</button>
+              <button className="btn pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                <span className="btn-text-full">First</span>
+                <span className="btn-text-short">«</span>
+              </button>
+              <button className="btn pagination-btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                <span className="btn-text-full">Prev</span>
+                <span className="btn-text-short">‹</span>
+              </button>
+              <span className="pagination-info">Page {currentPage} / {totalPages}</span>
+              <button className="btn pagination-btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                <span className="btn-text-full">Next</span>
+                <span className="btn-text-short">›</span>
+              </button>
+              <button className="btn pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                <span className="btn-text-full">Last</span>
+                <span className="btn-text-short">»</span>
+              </button>
             </div>
-            <div>
+            <div className="pagination-meta">
               <small>{sortedMonthly.length} records total</small>
             </div>
           </div>
