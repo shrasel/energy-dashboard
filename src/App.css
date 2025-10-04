@@ -391,6 +391,21 @@ body {
   flex-wrap: wrap;
 }
 
+/* React Select Container */
+.react-select-container {
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.filter-group .react-select-container {
+  min-width: 220px;
+}
+
+.chart-header .react-select-container {
+  min-width: 180px;
+}
+
+/* Legacy selectors - keep for backwards compatibility */
 .month-selector,
 .year-selector {
   padding: var(--spacing-sm) var(--spacing-md);
@@ -493,6 +508,13 @@ body {
     flex-direction: column;
     width: 100%;
     gap: var(--spacing-md);
+  }
+  
+  .react-select-container,
+  .filter-group .react-select-container,
+  .chart-header .react-select-container {
+    width: 100%;
+    min-width: 0;
   }
   
   .month-selector,

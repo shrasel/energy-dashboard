@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Select from 'react-select';
 import { Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -30,6 +31,63 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
+// Custom styles for React Select
+const customSelectStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: '44px',
+    borderRadius: '0.5rem',
+    border: state.isFocused ? '1px solid #6366f1' : '1px solid #e2e8f0',
+    boxShadow: state.isFocused ? '0 0 0 3px rgba(99, 102, 241, 0.1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    '&:hover': {
+      borderColor: '#6366f1',
+    },
+    fontSize: '0.9375rem',
+    fontWeight: '500',
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    padding: '12px 16px',
+    fontSize: '0.9375rem',
+    fontWeight: '500',
+    backgroundColor: state.isSelected ? '#6366f1' : state.isFocused ? '#f1f5f9' : 'white',
+    color: state.isSelected ? 'white' : '#0f172a',
+    cursor: 'pointer',
+    '&:active': {
+      backgroundColor: '#6366f1',
+    },
+  }),
+  menu: (provided) => ({
+    ...provided,
+    borderRadius: '0.5rem',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    border: '1px solid #e2e8f0',
+    overflow: 'hidden',
+  }),
+  menuList: (provided) => ({
+    ...provided,
+    padding: '4px',
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: '#0f172a',
+    fontWeight: '500',
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#94a3b8',
+  }),
+};
+
+const compactSelectStyles = {
+  ...customSelectStyles,
+  control: (provided, state) => ({
+    ...customSelectStyles.control(provided, state),
+    minHeight: '40px',
+    minWidth: '100px',
+  }),
+};
 
 function App() {
   const navigate = useNavigate();
@@ -449,17 +507,16 @@ useEffect(() => {
           </div>
           
           <div className="filter-group">
-            <select 
-              className="month-selector"
-              value={selectedMonth ? selectedMonth.value : ''}
-              onChange={(e) => handleMonthChange(e.target.value)}
-            >
-              {availableMonths.map((month, index) => (
-                <option key={index} value={month.value}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
+            <Select
+              className="react-select-container"
+              classNamePrefix="react-select"
+              value={selectedMonth ? { value: selectedMonth.value, label: selectedMonth.label } : null}
+              onChange={(option) => handleMonthChange(option.value)}
+              options={availableMonths.map(month => ({ value: month.value, label: month.label }))}
+              styles={customSelectStyles}
+              placeholder="Select month..."
+              isSearchable={false}
+            />
             
             <div className="date-range">
               <div className="date-input-group">
@@ -576,18 +633,18 @@ useEffect(() => {
       <div className="chart-card">
         <div className="chart-header">
           <h2>Monthly Energy Consumption & Cost ({filteredMonthlyData.length} months)</h2>
-          <select 
-            className="year-selector"
-            value={selectedYear || ''}
-            onChange={(e) => setSelectedYear(e.target.value === '' ? null : parseInt(e.target.value))}
-          >
-            <option value="">All Years</option>
-            {availableYears.map((year, index) => (
-              <option key={index} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <Select
+            className="react-select-container"
+            classNamePrefix="react-select"
+            value={selectedYear ? { value: selectedYear, label: selectedYear.toString() } : { value: '', label: 'All Years' }}
+            onChange={(option) => setSelectedYear(option.value === '' ? null : option.value)}
+            options={[
+              { value: '', label: 'All Years' },
+              ...availableYears.map(year => ({ value: year, label: year.toString() }))
+            ]}
+            styles={customSelectStyles}
+            isSearchable={false}
+          />
         </div>
         <div className="chart-wrapper">
           <Chart 
@@ -660,11 +717,20 @@ useEffect(() => {
           </div>
           <div>
             <label>Rows per page: </label>
-            <select className="page-input" value={rowsPerPage} onChange={e => { setRowsPerPage(parseInt(e.target.value)); setCurrentPage(1); }}>
-              <option value={5}>5</option>
-              <option value={8}>8</option>
-              <option value={12}>12</option>
-            </select>
+            <Select
+              className="react-select-container"
+              classNamePrefix="react-select"
+              value={{ value: rowsPerPage, label: rowsPerPage.toString() }}
+              onChange={(option) => { setRowsPerPage(option.value); setCurrentPage(1); }}
+              options={[
+                { value: 5, label: '5' },
+                { value: 8, label: '8' },
+                { value: 12, label: '12' },
+                { value: 20, label: '20' },
+              ]}
+              styles={compactSelectStyles}
+              isSearchable={false}
+            />
           </div>
         </div>
 
