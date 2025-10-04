@@ -644,7 +644,7 @@ useEffect(() => {
           />
         </div>
       </div>
-      
+      <div className="spacer" style={{ height: 32 }}></div>
       <div className="data-table">
         <h2>Detailed Data ({selectedYear ? selectedYear : 'All Years'} - {filteredMonthlyData.length} records)</h2>
         <div className="table-controls">
