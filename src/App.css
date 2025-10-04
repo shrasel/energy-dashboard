@@ -364,16 +364,30 @@ body {
 .chart-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: var(--spacing-lg);
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
+}
+
+.chart-header-title h2 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.chart-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  font-weight: 400;
 }
 
 .filter-group {
   display: flex;
   gap: var(--spacing-md);
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
 }
 
@@ -382,12 +396,20 @@ body {
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   background: var(--color-surface);
   color: var(--color-text-primary);
   min-width: 180px;
   cursor: pointer;
   transition: all var(--transition-base);
+  font-weight: 500;
+}
+
+.month-selector option,
+.year-selector option {
+  font-size: 1rem;
+  padding: var(--spacing-sm);
+  font-weight: 500;
 }
 
 .month-selector:hover,
@@ -403,15 +425,112 @@ body {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* Chart Summary (Total kWh and charges) */
+.chart-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.summary-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.summary-divider {
+  color: var(--color-text-muted);
+  margin: 0 var(--spacing-xs);
+}
+
+/* Chart Legends */
+.chart-legends {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.legend-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+  
   .filter-group {
+    flex-direction: column;
     width: 100%;
+    gap: var(--spacing-md);
   }
   
   .month-selector,
   .year-selector {
-    flex: 1;
+    width: 100%;
     min-width: 0;
+    font-size: 1rem;
+  }
+  
+  .month-selector option,
+  .year-selector option {
+    font-size: 1.0625rem;
+  }
+  
+  .chart-summary {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .summary-label,
+  .summary-value {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-header-title h2 {
+    font-size: 1rem;
+  }
+  
+  .chart-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .month-selector,
+  .year-selector {
+    padding: var(--spacing-md);
+    font-size: 1rem;
   }
 }
 
@@ -419,45 +538,74 @@ body {
    DATE RANGE
 ======================================== */
 .date-range {
-  margin: var(--spacing-md) 0;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
   gap: var(--spacing-sm);
 }
 
-.date-range label {
+.date-range label,
+.date-input-group label {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   font-weight: 500;
   white-space: nowrap;
 }
 
-.date-range input {
+.date-range input,
+.date-input-group input {
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--color-text-primary);
   background: var(--color-surface);
   transition: all var(--transition-base);
   min-width: 150px;
+  font-weight: 500;
 }
 
-.date-range input:focus {
+.date-range input:focus,
+.date-input-group input:focus {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .date-range {
+    width: 100%;
     flex-direction: column;
     align-items: stretch;
+    gap: var(--spacing-sm);
   }
   
-  .date-range input {
+  .date-input-group {
     width: 100%;
+    justify-content: space-between;
+  }
+  
+  .date-input-group label {
+    font-size: 0.9375rem;
+  }
+  
+  .date-input-group input {
+    flex: 1;
+    min-width: 0;
+    font-size: 1rem;
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 640px) {
+  .date-input-group input {
+    font-size: 0.9375rem;
   }
 }
 

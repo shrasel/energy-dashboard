@@ -442,14 +442,12 @@ useEffect(() => {
       
       {/* Daily Chart */}
       <div className="chart-card">
-        <div className="chart-header" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div>
-              <h2>Daily Consumption</h2>
-              <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
-                Click on any bar to view hourly details
-              </div>
-            </div>
+        <div className="chart-header">
+          <div className="chart-header-title">
+            <h2>Daily Consumption</h2>
+            <p className="chart-subtitle">Click on any bar to view hourly details</p>
+          </div>
+          
           <div className="filter-group">
             <select 
               className="month-selector"
@@ -462,37 +460,45 @@ useEffect(() => {
                 </option>
               ))}
             </select>
+            
             <div className="date-range">
-              <label>From: </label>
-              <input 
-                type="date" 
-                value={dateRange.start.toISOString().split('T')[0]}
-                onChange={e => setDateRange({...dateRange, start: new Date(e.target.value)})}
-              />
-              <label> To: </label>
-              <input 
-                type="date" 
-                value={dateRange.end.toISOString().split('T')[0]}
-                onChange={e => setDateRange({...dateRange, end: new Date(e.target.value)})}
-              />
+              <div className="date-input-group">
+                <label>From:</label>
+                <input 
+                  type="date" 
+                  value={dateRange.start.toISOString().split('T')[0]}
+                  onChange={e => setDateRange({...dateRange, start: new Date(e.target.value)})}
+                />
+              </div>
+              <div className="date-input-group">
+                <label>To:</label>
+                <input 
+                  type="date" 
+                  value={dateRange.end.toISOString().split('T')[0]}
+                  onChange={e => setDateRange({...dateRange, end: new Date(e.target.value)})}
+                />
+              </div>
             </div>
           </div>
-          </div>
-            {/* Show total kWh and total charges for the selected range */}
-            <div style={{ marginTop: 8, fontWeight: 500, color: '#2c3e50' }}>
-              Total: {totalDailyKwh.toFixed(2)} kWh | ${totalDailyCharges.toFixed(2)}
-            </div>
-          {monthLegends.length > 1 && (
-            <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
-              {monthLegends.map((m) => (
-                <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 12, height: 12, background: m.color, display: 'inline-block', borderRadius: 2, border: '1px solid #ccc' }} />
-                  <span style={{ fontSize: 12, color: '#555' }}>{m.label}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
+        
+        <div className="chart-summary">
+          <span className="summary-label">Total:</span>
+          <span className="summary-value">{totalDailyKwh.toFixed(2)} kWh</span>
+          <span className="summary-divider">|</span>
+          <span className="summary-value">${totalDailyCharges.toFixed(2)}</span>
+        </div>
+        
+        {monthLegends.length > 1 && (
+          <div className="chart-legends">
+            {monthLegends.map((m) => (
+              <div key={m.key} className="legend-item">
+                <span className="legend-color" style={{ backgroundColor: m.color }} />
+                <span className="legend-label">{m.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="chart-wrapper">
           <Chart 
             type='bar'
