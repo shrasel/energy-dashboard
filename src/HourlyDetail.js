@@ -99,28 +99,66 @@ function HourlyDetail() {
 
   return (
     <div className="dashboard">
-      <header className="header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* Premium Minimal Header */}
+      <div className="premium-detail-header">
+        <div className="premium-header-top">
           <button 
             onClick={() => navigate('/')}
-            style={{
-              background: '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
+            className="icon-back-button"
+            aria-label="Back to Dashboard"
           >
-            ← Back to Dashboard
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
-          <div>
-            <h1>Hourly Consumption Detail</h1>
-            <div className="last-updated">{formattedDate}</div>
+          
+          <div className="breadcrumb">
+            <span className="breadcrumb-item" onClick={() => navigate('/')} style={{cursor: 'pointer'}}>Dashboard</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="breadcrumb-separator">
+              <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="breadcrumb-item active">Hourly Detail</span>
           </div>
         </div>
-      </header>
+        
+        <div className="premium-header-main">
+          <div className="premium-title-section">
+            <h1 className="premium-title">Hourly Consumption</h1>
+            <div className="premium-meta">
+              <span className="meta-badge">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 1.75V7L10.5 8.75M12.25 7C12.25 9.89949 9.89949 12.25 7 12.25C4.10051 12.25 1.75 9.89949 1.75 7C1.75 4.10051 4.10051 1.75 7 1.75C9.89949 1.75 12.25 4.10051 12.25 7Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {formattedDate}
+              </span>
+              <span className="meta-divider">•</span>
+              <span className="meta-badge">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2.625 7H11.375M2.625 3.5H11.375M2.625 10.5H11.375" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {hourlyData.length} intervals
+              </span>
+            </div>
+          </div>
+          
+          <div className="premium-stats-inline">
+            <div className="stat-inline">
+              <span className="stat-label">Total Consumption</span>
+              <span className="stat-value">{totalHourlyKwh.toFixed(2)} kWh</span>
+            </div>
+            <div className="stat-divider"></div>
+            <div className="stat-inline">
+              <span className="stat-label">Total Cost</span>
+              <span className="stat-value">${totalHourlyCharges.toFixed(2)}</span>
+            </div>
+            <div className="stat-divider"></div>
+            <div className="stat-inline">
+              <span className="stat-label">Avg/Hour</span>
+              <span className="stat-value">{hourlyData.length > 0 ? (totalHourlyKwh / hourlyData.length).toFixed(2) : '0.00'} kWh</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Summary cards for the day */}
       <div className="summary-cards">
