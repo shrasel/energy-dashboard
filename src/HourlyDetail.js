@@ -156,42 +156,21 @@ function HourlyDetail() {
               <span className="stat-label">Avg/Hour</span>
               <span className="stat-value">{hourlyData.length > 0 ? (totalHourlyKwh / hourlyData.length).toFixed(2) : '0.00'} kWh</span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Summary cards for the day */}
-      <div className="summary-cards">
-        <div className="card">
-          <h3>Total Daily Consumption</h3>
-          <div className="value">{totalHourlyKwh.toFixed(2)} kWh</div>
-          <div className="subtext">Sum of 24 hours</div>
-        </div>
-        <div className="card">
-          <h3>Total Daily Charges</h3>
-          <div className="value">${totalHourlyCharges.toFixed(2)}</div>
-          <div className="subtext">Sum of 24 hours</div>
-        </div>
-        <div className="card">
-          <h3>Average Hourly Usage</h3>
-          <div className="value">{hourlyData.length > 0 ? (totalHourlyKwh / hourlyData.length).toFixed(2) : '0.00'} kWh</div>
-          <div className="subtext">Per hour average</div>
-        </div>
-        <div className="card">
-          <h3>Peak Hour</h3>
-          <div className="value">
-            {hourlyData.length > 0 ? (() => {
+            <div className="stat-divider"></div>
+            <div className="stat-inline">
+              <span className="stat-label">Peak Hour</span>
+              <span className="stat-value">{hourlyData.length > 0 ? (() => {
               const peakInterval = hourlyData.reduce((max, item) => 
                 parseFloat(item.total_consumption || item.consumption || 0) > 
                 parseFloat(max.total_consumption || max.consumption || 0) ? item : max
               , hourlyData[0]);
               return formatTimeInterval(peakInterval.from_date);
-            })() : 'N/A'}
+            })() : 'N/A'}</span>
+            </div>
           </div>
-          <div className="subtext">Highest consumption interval</div>
         </div>
       </div>
-
+      
       {/* Hourly Chart */}
       <div className="chart-card">
         <div className="chart-header">
@@ -261,7 +240,7 @@ function HourlyDetail() {
           />
         </div>
       </div>
-
+      <div className="spacer" style={{ height: '32px' }}></div>
       {/* 15-minute Data Table */}
       <div className="data-table">
         <h2>15-Minute Interval Breakdown</h2>
