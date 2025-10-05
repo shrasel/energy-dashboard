@@ -524,7 +524,10 @@ useEffect(() => {
                 <input 
                   type="date" 
                   value={dateRange.start.toISOString().split('T')[0]}
-                  onChange={e => setDateRange({...dateRange, start: new Date(e.target.value)})}
+                  onChange={e => {
+                    setDateRange({...dateRange, start: new Date(e.target.value + 'T12:00:00')});
+                    setSelectedMonth(null); // Clear month selection when manually changing dates
+                  }}
                 />
               </div>
               <div className="date-input-group">
@@ -532,7 +535,10 @@ useEffect(() => {
                 <input 
                   type="date" 
                   value={dateRange.end.toISOString().split('T')[0]}
-                  onChange={e => setDateRange({...dateRange, end: new Date(e.target.value)})}
+                  onChange={e => {
+                    setDateRange({...dateRange, end: new Date(e.target.value + 'T12:00:00')});
+                    setSelectedMonth(null); // Clear month selection when manually changing dates
+                  }}
                 />
               </div>
             </div>
